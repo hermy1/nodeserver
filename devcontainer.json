@@ -1,0 +1,27 @@
+
+{
+    "name": "Node.js Development",
+    "build": {
+      "dockerfile": "Dockerfile",
+      "context": "..",
+      "args": { }
+    },
+    "settings": {},
+    "extensions": [
+      "dbaeumer.vscode-eslint"
+    ],
+    "containerEnv": {
+      "NODE_ENV": "development"
+    },
+    "postCreateCommand": "yarn install",
+    "forwardPorts": [7000],
+    "appPort": [7000],
+    "extensions": [
+      "dbaeumer.vscode-eslint"
+    ],
+    "remoteUser": "node",
+    "workspaceFolder": "/workspace",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+    "workspaceVolume": "/workspace"
+  }
+  
