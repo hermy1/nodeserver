@@ -14,7 +14,7 @@ COPY . .
 
 RUN yarn global add concurrently nodemon typescript ts-node 
 
-RUN yarn run build
+# RUN yarn run build
 
 EXPOSE 7000
 
