@@ -5,6 +5,8 @@ import * as http from "http";
 import session from "express-session";
 import { Me } from "./core/models/me";
 import config from "./core/config";
+import User from "./core/models/user";
+import { UserError } from "./core/errors/base";
 
 interface MainOptions {
   port: number;
@@ -33,10 +35,19 @@ export async function main(options: MainOptions) {
     //set routes
     app.use("/user", userRoutes);
 
+    //set error handler
+    app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+      //check error type
+      if(err instanceof UserError){
+        res.status(err.statusCode).send({message: err.message});
+      } else {
+        res.status(500).send({message: "A server error has occured"});
+      }
+      console.log('theere was a problem',err.message);
+      
+    });
+
    
-  
-
-
     //start server
     const server = http.createServer(app);
     server.listen(options.port);
