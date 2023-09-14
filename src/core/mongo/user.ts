@@ -29,3 +29,16 @@ export const insertNewUser = async (username:string, password:string, birthdate:
         }
     });
 }
+
+export const getAllUsers = async (): Promise<User[]> => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let db = await getDB();
+            const collection = db.collection<User>('users');
+            const result = await collection.find({}).toArray();
+            resolve(result);
+        }catch(err){
+            reject(err)
+        }
+    });
+}  

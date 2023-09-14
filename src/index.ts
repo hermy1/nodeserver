@@ -18,23 +18,26 @@ declare module "express-session" {
 export async function main(options: MainOptions) {
   try {
     const app = express();
-    app.use("/user", userRoutes);
     //set body parser and limit size for attacks
     app.use(bodyParser.json({ limit: "5mb" }));
     // for parsing application/x-www-form-urlencoded
     app.use(bodyParser.urlencoded({ limit: "5mb", extended: false }));
-
-    app.use("/user", userRoutes);
+    const sess = session({
+      secret: config.server.secret,
+      resave: false,
+      saveUninitialized: false,
+      cookie: { secure: false, maxAge: 6000000 },
+    });
     //set session
-    app.use(
-      session({
-        secret: config.server.secret,
-        resave: false,
-        saveUninitialized: true,
-        cookie: { secure: false },
-      })
-    );
+    app.use(sess);
+    //set routes
+    app.use("/user", userRoutes);
 
+   
+  
+
+
+    //start server
     const server = http.createServer(app);
     server.listen(options.port);
   } catch (err) {}
