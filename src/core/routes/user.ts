@@ -47,7 +47,7 @@ router.post(
         res.json("You must be an admin that is logged in");
       }
     } catch (err) {
-      console.log("error: ", err);
+      next(err);
     }
   }
 );

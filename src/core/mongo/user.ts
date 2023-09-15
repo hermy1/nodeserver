@@ -1,6 +1,7 @@
 import User from "../models/user";
 import { getDB } from "../config/utils/mongohelper";
 import * as bcrypt from "bcrypt";
+import { MongoInsertError } from "../errors/mongo";
 // controller
 
 export const insertNewUser = async (
@@ -25,7 +26,7 @@ export const insertNewUser = async (
           newUser._id = result.insertedId;
           resolve(newUser);
         } else {
-          reject("Cannot insert new user");
+            throw new MongoInsertError("Something went wrong, cannot insert new user");
         }
       });
     } catch (err) {
@@ -47,13 +48,17 @@ export const getAllUsers = async (): Promise<User[]> => {
   });
 };
 
-export const getUserbyUsername = async (username: string): Promise<User> => {
+export const getUserbyUsername = async (username: string): Promise<User | null> => {
   return new Promise(async (resolve, reject) => {
     try {
       let db = await getDB();
       const collection = db.collection<User>("users");
       const result = await collection.findOne({ username: username });
-      resolve(result as User);
+      if (result) {
+        resolve(result);
+      } else {
+        resolve(null);
+      }
     } catch (err) {
       reject(err);
     }
