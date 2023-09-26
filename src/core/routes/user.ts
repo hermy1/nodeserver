@@ -2,6 +2,8 @@ import express, { Request, Response, NextFunction, Router } from "express";
 import { insertNewUser, getAllUsers, getUserbyUsername } from "../mongo/user";
 import { Me } from "../models/me";
 import bycrpt from "bcrypt";
+import { MongoInsertError } from "../errors/mongo"; 
+import { BadRequestError, unauthorizedError } from "../errors/user";
 
 const router: Router = express.Router();
 //test route
@@ -36,15 +38,22 @@ router.post(
             let newUser = await insertNewUser(username, password, birthday);
             if (newUser) {
               res.json(newUser);
+            } else {
+              // res.json("Something went wrong");
+              throw new MongoInsertError("Something went wrong");
             }
           } else {
-            res.json("You need to send a password");
+            // res.json("You need to send a password");
+            throw new BadRequestError("You need to send a password");
           }
         } else {
-          res.json("You need to send a username");
+          // res.json("You need to send a username");
+          throw new BadRequestError("You need to send a username");
+
         }
       } else {
-        res.json("You must be an admin that is logged in");
+        // res.json("You must be an admin that is logged in");
+        throw new unauthorizedError("You must be an admin that is logged in");
       }
     } catch (err) {
       next(err);
@@ -65,7 +74,7 @@ router.get("/all", async (req: Request, res: Response, next: NextFunction) => {
     console.log("error: ", err);
   }
 });
-export default router;
+
 
 //login
 router.post("/login", async (req: Request, res: Response, next: NextFunction) => {
@@ -95,3 +104,5 @@ router.post("/login", async (req: Request, res: Response, next: NextFunction) =>
     }
   }
 );
+
+export default router;
