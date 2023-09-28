@@ -6,5 +6,5 @@ export interface Config {
     password: string;
     database: string;
   };
-  server: { secret: string };
+  server: { secret: string , mongoConnect: string};
 }
