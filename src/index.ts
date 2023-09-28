@@ -7,6 +7,8 @@ import { Me } from "./core/models/me";
 import config from "./core/config";
 import User from "./core/models/user";
 import { UserError } from "./core/errors/base";
+import MongoStore  from 'connect-mongo';
+
 
 interface MainOptions {
   port: number;
@@ -20,6 +22,11 @@ declare module "express-session" {
 export async function main(options: MainOptions) {
   try {
     const app = express();
+    //mongo store for session
+    const mongoStore = MongoStore.create({
+      mongoUrl: config.server.mongoConnect,
+    })
+  
     //set body parser and limit size for attacks
     app.use(bodyParser.json({ limit: "5mb" }));
     // for parsing application/x-www-form-urlencoded
@@ -29,9 +36,12 @@ export async function main(options: MainOptions) {
       resave: false,
       saveUninitialized: false,
       cookie: { secure: false, maxAge: 6000000 },
+      //creates new store for session in mongo
+      store : mongoStore
     });
     //set session
     app.use(sess);
+
     //set routes
     app.use("/user", userRoutes);
 

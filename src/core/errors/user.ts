@@ -12,7 +12,7 @@ export class BadRequestError extends UserError {
 }
 
 //unauthorized error
-export class unauthorizedError extends UserError {
+export class UnauthorizedError extends UserError {
     constructor(message: string){
         super(message);
     }

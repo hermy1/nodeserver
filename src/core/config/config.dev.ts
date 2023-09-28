@@ -11,7 +11,8 @@ const config: Config = {
         database: process.env.DB_DATABASE || ''
     },
     server: {
-        secret: process.env.SECRET || 'ISJFOWIEJOWJEOIWE'
+        secret: process.env.SECRET || 'ISJFOWIEJOWJEOIWE',
+        mongoConnect: `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DATABASE}`
     }
 }
 

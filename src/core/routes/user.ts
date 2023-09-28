@@ -3,7 +3,8 @@ import { insertNewUser, getAllUsers, getUserbyUsername } from "../mongo/user";
 import { Me } from "../models/me";
 import bycrpt from "bcrypt";
 import { MongoInsertError } from "../errors/mongo"; 
-import { BadRequestError, unauthorizedError } from "../errors/user";
+import { BadRequestError, UnauthorizedError } from "../errors/user";
+import { isAdmin, isLoggedIn } from "../middleware/auth";
 
 const router: Router = express.Router();
 //test route
@@ -19,6 +20,32 @@ router.get("/ping", async (req: Request, res: Response, next: NextFunction) => {
       res.json("pong");
     }
     res.json("done");
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+//no admin test middle auth
+router.get("/notadmin", isLoggedIn, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.json ("we re logged in but not admin")
+  } catch (err) {
+    console.log(err);
+  }
+});
+//admin test middle auth
+router.get("/isadmin", isAdmin, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.json ("we re logged in and we're admin")
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+//both test middle auth
+router.get("/both", isLoggedIn, isAdmin, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.json ("we re logged in and we're admin")
   } catch (err) {
     console.log(err);
   }
@@ -53,7 +80,7 @@ router.post(
         }
       } else {
         // res.json("You must be an admin that is logged in");
-        throw new unauthorizedError("You must be an admin that is logged in");
+        throw new UnauthorizedError("You must be an admin that is logged in");
       }
     } catch (err) {
       next(err);
@@ -90,7 +117,7 @@ router.post("/login", async (req: Request, res: Response, next: NextFunction) =>
         if (isPasswordCorrect) {
           let me = new Me();
           me.username = currentUser.username;
-          me.isAdmin = true;
+          me.isAdmin = false;
           req.session.Me = me;
           res.json("logged in");
         } else {
