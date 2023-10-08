@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import bodyParser from "body-parser";
 import userRoutes from "./core/routes/user";
+import petRoutes from "./core/routes/pet";
 import * as http from "http";
 import session from "express-session";
 import { Me } from "./core/models/me";
@@ -28,12 +29,14 @@ export async function main(options: MainOptions) {
       secret: config.server.secret,
       resave: false,
       saveUninitialized: false,
-      cookie: { secure: false, maxAge: 6000000 },
+      cookie: { secure: false, maxAge: 600000000 },
     });
     //set session
     app.use(sess);
     //set routes
     app.use("/user", userRoutes);
+    //pet routes
+    app.use("/pet", petRoutes);
 
     //set error handler
     app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

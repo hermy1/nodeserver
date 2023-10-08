@@ -1,9 +1,11 @@
 import express, { Request, Response, NextFunction, Router } from "express";
-import { insertNewUser, getAllUsers, getUserbyUsername } from "../mongo/user";
+import { insertNewUser, getAllUsers, getUserbyUsername, getUserbyId, changeUserToAdmin } from "../mongo/user";
 import { Me } from "../models/me";
 import bycrpt from "bcrypt";
-import { MongoInsertError } from "../errors/mongo"; 
-import { BadRequestError, unauthorizedError } from "../errors/user";
+import { MongoInsertError } from "../errors/mongo";
+import { BadRequestError, UnauthorizedError } from "../errors/user";
+import { isAdmin, isLoggedIn } from "../middleware/auth";
+import { ensureObjectID } from "../config/utils/mongohelper";
 
 const router: Router = express.Router();
 //test route
@@ -32,10 +34,11 @@ router.post(
       let username = req.body.username;
       let password = req.body.password;
       let birthday = req.body.birthday;
-      if (req.session.Me && req.session.Me.isAdmin) {
+      let isAdmin = req.body.isAdmin;
+      // if (req.session.Me && req.session.Me.isAdmin) {
         if (username && username.length > 0) {
           if (password && password.length > 0) {
-            let newUser = await insertNewUser(username, password, birthday);
+            let newUser = await insertNewUser(username, password, birthday, isAdmin);
             if (newUser) {
               res.json(newUser);
             } else {
@@ -49,13 +52,9 @@ router.post(
         } else {
           // res.json("You need to send a username");
           throw new BadRequestError("You need to send a username");
-
         }
-      } else {
-        // res.json("You must be an admin that is logged in");
-        throw new unauthorizedError("You must be an admin that is logged in");
-      }
-    } catch (err) {
+      } 
+    catch (err) {
       next(err);
     }
   }
@@ -75,9 +74,10 @@ router.get("/all", async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-
 //login
-router.post("/login", async (req: Request, res: Response, next: NextFunction) => {
+router.post(
+  "/login",
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       let username = req.body.username;
       let password = req.body.password;
@@ -90,8 +90,10 @@ router.post("/login", async (req: Request, res: Response, next: NextFunction) =>
         if (isPasswordCorrect) {
           let me = new Me();
           me.username = currentUser.username;
-          me.isAdmin = true;
+          me.isAdmin = currentUser.isAdmin;
+          me._id = currentUser._id;
           req.session.Me = me;
+        
           res.json("logged in");
         } else {
           res.json("combination is incorrect");
@@ -104,5 +106,60 @@ router.post("/login", async (req: Request, res: Response, next: NextFunction) =>
     }
   }
 );
+
+
+//ADMIN ROUTES
+//all users
+router.get('/users', isLoggedIn, isAdmin, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    let users = await getAllUsers();
+    res.json(users);
+  } catch (err) {
+    next(err);
+  }
+});
+//change users to admin
+router.patch('/edituser', isLoggedIn, isAdmin, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    let userId = req.body.userId;
+    let isAdmin = req.body.isAdmin;
+    if(userId && userId.length > 0){
+      userId = ensureObjectID(userId);
+      isAdmin = isAdmin ? true : false;
+      let user = await getUserbyId(userId);
+      if(user){
+        let result = await changeUserToAdmin(userId, isAdmin);
+        if(result){
+          res.json("User updated");
+        } else {
+          throw new BadRequestError("Something went wrong");
+        }
+      } else {
+        throw new BadRequestError("User does not exist");
+      }
+    } else {
+      throw new BadRequestError("You need to send a userId");
+    }
+  } catch (err) {}
+});
+
+//logout for all
+router.get("/logout", async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (req.session.Me) {
+      req.session.destroy((err) => {
+        if (err) {
+          throw new BadRequestError("Something went wrong");
+        } else {
+          res.json("logged out");
+        }
+      });
+    } else {
+      res.json("You are not logged in");
+    }
+  } catch (err) {
+    next(err);
+  }
+});
 
 export default router;

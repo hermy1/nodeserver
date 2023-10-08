@@ -18,3 +18,11 @@ export const getDB = async (): Promise<Db> => {
     return mongoInstance;
 };
 
+//ensure object id
+export const ensureObjectID = (id: any) => {
+    if (typeof id === 'string') {
+        return new ObjectId(id);
+    }
+
+    return id;
+}
