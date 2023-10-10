@@ -5,4 +5,3 @@ export class Me{
     isAdmin: boolean = false;   
   
 }
-//TODO: objectID checking and switching to string
