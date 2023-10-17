@@ -140,7 +140,9 @@ router.patch('/edituser', isLoggedIn, isAdmin, async (req: Request, res: Respons
     } else {
       throw new BadRequestError("You need to send a userId");
     }
-  } catch (err) {}
+  } catch (err) {
+    next(err);
+  }
 });
 
 //logout for all
