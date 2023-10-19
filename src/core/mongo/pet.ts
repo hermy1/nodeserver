@@ -1,7 +1,7 @@
 import { getDB } from "../config/utils/mongohelper";
 import { MongoFindError, MongoInsertError } from "../errors/mongo";
 import { AggregationCursor, ObjectId } from "mongodb";
-import { FullPet, Breed, Toy } from "../models/pet";
+import { FullPet, Breed, Toy, FoodAndBrand } from "../models/pet";
 import Pet from "../models/pet";
 import { ensureObjectID } from "../config/utils/mongohelper";
 
@@ -239,6 +239,117 @@ export const getFulltPetByIdss = async (
         }
       } else {
         throw new MongoFindError(`Pet with id Aggregation ${petId} not found`);
+      }
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
+
+export const getFoodByIdWithBrand = async (
+  petFoodId: ObjectId
+): Promise<FoodAndBrand | null> => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let db = await getDB();
+      const collection = db.collection<FoodAndBrand>("petfood");
+      const result: AggregationCursor<FoodAndBrand> =
+        await collection.aggregate([
+          //level 1 pet food table
+          { $match: { _id: ensureObjectID(petFoodId) } },
+          {
+            $lookup: {
+              from: "brand",
+              let: { id: "$brand" },
+              pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$id"] } } }],
+              as: "brand",
+            },
+          },
+          //unwind
+          { $unwind: { path: "$brand", preserveNullAndEmptyArrays: false } },
+        ]);
+
+      if (result) {
+        const resultArray = await result.toArray();
+        if (resultArray.length > 0) {
+          resolve(resultArray[0]);
+        } else {
+          throw new Error(`Pet food with id ${petFoodId} not found`);
+        }
+      }
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
+
+//get a full pet aggregate with brand and pet food
+
+export const getFullPetByIdWithBrandAndFood = async (
+  petId: ObjectId
+): Promise<FullPet | null> => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let db = await getDB();
+      const collection = db.collection<FullPet>("pets");
+      const result: AggregationCursor<FullPet> = await collection.aggregate([
+        //pet table
+        { $match: { _id: ensureObjectID(petId) } },
+        //breed table
+        {
+          $lookup: {
+            from: "breed",
+            let: { id: "$_id" },
+            pipeline: [{ $match: { $expr: { $eq: ["$petId", "$$id"] } } }],
+            as: "breed",
+          },
+        },
+        //unwind
+        { $unwind: { path: "$breed", preserveNullAndEmptyArrays: false } },
+        //toy table
+        {
+          $lookup: {
+            from: "toy",
+            let: { id: "$_id" },
+            pipeline: [{ $match: { $expr: { $eq: ["$petId", "$$id"] } } }],
+            as: "toys",
+          },
+        },
+        //pet food table 
+        {
+          $lookup: {
+            from: "petfood",
+            let: { id: "$favouriteFood" },
+            pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$id"] } } }],
+            as: "petfood",
+          },
+        },
+        //unwind
+        { $unwind: { path: "$petfood", preserveNullAndEmptyArrays: false } },
+        //brand table
+        {
+          $lookup: {
+            from: "brand",
+            let: { id: "$petfood.brand" },
+            pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$id"] } } }],
+            as: "petfood.brand",
+          },
+        },
+        //unwind
+        {
+          $unwind: {
+            path: "$petfood.brand",
+            preserveNullAndEmptyArrays: false,
+          },
+        },
+      ]);
+      if (result) {
+        const resultArray = await result.toArray();
+        if (resultArray.length > 0) {
+          resolve(resultArray[0]);
+        } else {
+          throw new Error(`Pet with id ${petId} not found`);
+        }
       }
     } catch (err) {
       reject(err);

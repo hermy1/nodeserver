@@ -5,6 +5,8 @@ export default class Pet {
     name: string = '';
     type : string = '';
     age: number = -1;
+    //added favourite food
+    favouriteFood: ObjectId = new ObjectId();
     userId: ObjectId = new ObjectId();
     createdAt: Date = new Date();
     updatedAt: Date = new Date();
@@ -38,4 +40,31 @@ export class FullPet {
 }
 
 
+//pet food
+export class PetFood {
+    _id: ObjectId = new ObjectId();
+    type: string = '';
+    brand: ObjectId = new ObjectId();
+    size: number = -1;
+    createdAt: Date = new Date();
+    updatedAt: Date = new Date();
+}
 
+//brand
+export class Brand {
+    _id: ObjectId = new ObjectId();
+    name: string = '';
+    description: string = '';
+    createdAt: Date = new Date();
+    updatedAt: Date = new Date();
+}
+
+//food and brand 
+
+export class FoodAndBrand {
+    _id: ObjectId = new ObjectId();
+    petFoodId: ObjectId = new ObjectId();
+    brand: Brand = new Brand();
+    createdAt: Date = new Date();
+    updatedAt: Date = new Date();
+}

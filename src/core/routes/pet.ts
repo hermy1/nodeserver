@@ -10,6 +10,8 @@ import {
   getBreedByPetId,
   getToysByPetId,
   getFulltPetByIdss,
+  getFoodByIdWithBrand,
+  getFullPetByIdWithBrandAndFood,
 } from "../mongo/pet";
 import { BadRequestError, UnauthorizedError } from "../errors/user";
 import { isAdmin, isLoggedIn } from "../middleware/auth";
@@ -236,4 +238,36 @@ router.get(
   }
 );
 
+
+//get food and brand
+router.get('/foodandbrand', async (req: Request, res: Response, next: NextFunction) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const petFoodId = req.query.petFoodId?.toString();
+      if (petFoodId) {
+        const foodAndBrand = await getFoodByIdWithBrand(ensureObjectID(petFoodId));
+        res.json({data: foodAndBrand});
+      }
+    } catch (err) {
+      console.log(err);
+      next(err);
+    }
+  });
+});
+
+//get a full pet 
+router.get('/fullpet', async (req: Request, res: Response, next: NextFunction) => {
+  return new Promise (async (resolve, reject) => {
+    try {
+      const petId = req.query.petId?.toString();
+      if(petId) {
+        const fullPet = await getFullPetByIdWithBrandAndFood(ensureObjectID(petId));
+        res.json({data: fullPet});
+      }
+    } catch (err) {
+      console.log(err);
+      next(err);
+    }
+  });
+});
 export default router;
