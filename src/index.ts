@@ -8,10 +8,13 @@ import config from "./core/config";
 import User from "./core/models/user";
 import { UserError } from "./core/errors/base";
 import MongoStore  from 'connect-mongo';
+import winston from 'winston';
+import { logger } from "./core/config/utils/logger";
 
 
 interface MainOptions {
   port: number;
+  env?: string;
 }
 
 declare module "express-session" {
@@ -21,6 +24,14 @@ declare module "express-session" {
 }
 export async function main(options: MainOptions) {
   try {
+    //logger
+    if (options.env === "development") {
+      winston.addColors(config.logging.colors);
+      // logger.add(new winston.transports.Console({ format: winston.format.simple() }));
+    } else {
+      logger.add(new winston.transports.File({ filename: config.logging.file, level: config.logging.level }));
+    }
+
     const app = express();
     //mongo store for session
     const mongoStore = MongoStore.create({
@@ -53,7 +64,8 @@ export async function main(options: MainOptions) {
       } else {
         res.status(500).send({message: "A server error has occured"});
       }
-      console.log('theere was a problem',err.message);
+      // console.log('theere was a problem',err.message);
+      logger.log({level: 'error', message: `There was a problem ${err.message}`});
       
     });
 
@@ -66,11 +78,14 @@ export async function main(options: MainOptions) {
 
 if (require.main === module) {
   const PORT = 7000;
-  main({ port: PORT })
+  const ENV = process.env.NODE_ENV ?? "development";
+  main({ port: PORT, env: ENV })
     .then(() => {
-      console.log("started successfuly");
+      // console.log("started successfuly" );
+      logger.log({level: 'info', message: `started successfuly`});
     })
-    .catch(() => {
-      console.log("Something went wrong");
+    .catch((err) => {
+      // console.log("Something went wrong");
+      logger.log({level: 'emerg', message: `Something went wrong ${err}`});
     });
 }

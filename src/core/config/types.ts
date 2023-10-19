@@ -6,5 +6,16 @@ export interface Config {
     password: string;
     database: string;
   };
-  server: { secret: string , mongoConnect: string};
+  server: { 
+    secret: string; 
+    mongoConnect: string 
+  };
+  //logging 
+  logging: {
+    levels: {};
+    colors: {};
+    silent: boolean;
+    level: string;
+    file: string;
+  };
 }

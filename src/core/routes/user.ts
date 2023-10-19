@@ -5,11 +5,18 @@ import bycrpt from "bcrypt";
 import { MongoInsertError } from "../errors/mongo"; 
 import { BadRequestError, UnauthorizedError } from "../errors/user";
 import { isAdmin, isLoggedIn } from "../middleware/auth";
+import { logger } from "../config/utils/logger";
 
 const router: Router = express.Router();
 //test route
 router.get("/ping", async (req: Request, res: Response, next: NextFunction) => {
   try {
+    logger.log({ level: "debug", message: "ping" })
+    logger.log({ level: "info", message: "ping info message" })
+    logger.log({ level: "warning", message: "ping warning message" })
+    logger.log({ level: "error", message: "ping error message" })
+    logger.log({ level: "alert", message: "ping alert message" })
+    logger.log({ level: "emerg", message: "ping emerg message" })
     if (req.session.Me) {
       console.log(req.session.Me);
     } else {
